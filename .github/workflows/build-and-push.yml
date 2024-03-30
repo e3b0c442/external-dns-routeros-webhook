@@ -28,4 +28,4 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: ghcr.io/e3b0c442/external-dns-routeros-webook:latest
+          tags: ghcr.io/e3b0c442/external-dns-routeros-webhook:latest

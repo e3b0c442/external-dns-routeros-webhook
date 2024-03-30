@@ -31,7 +31,7 @@ func init() {
 	flag.StringVar(&password, "router-password", defaultEnv("WEBHOOK_ROUTER_PASSWORD", ""), "Password for the router")
 }
 
-var client *http.Client
+var client *RouterOSAPIClient
 
 func main() {
 	flag.Parse()
@@ -40,7 +40,7 @@ func main() {
 		slog.SetLogLoggerLevel(slog.LevelDebug)
 	}
 
-	client = &http.Client{}
+	client = NewRouterOSAPIClient(username, password, routerURL)
 
 	http.HandleFunc("GET /", GetDomainFilter)
 	http.HandleFunc("GET /records", Records)

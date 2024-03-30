@@ -2,11 +2,12 @@ package main
 
 import (
 	"fmt"
-	"log/slog"
 	"regexp"
 	"strconv"
+)
 
-	"sigs.k8s.io/external-dns/endpoint"
+var (
+	ErrUnsupportedRecordType = fmt.Errorf("unsupported record type")
 )
 
 type strings []string
@@ -61,6 +62,7 @@ func (t *TTL) UnmarshalJSON(data []byte) error {
 }
 
 type Record struct {
+	ID   string `json:".id"`
 	Name string `json:"name"`
 	Type string `json:"type"`
 	TTL  TTL    `json:"ttl"`
@@ -76,57 +78,4 @@ type Record struct {
 	SrvPort      string `json:"srv-port"`
 	SrvTarget    string `json:"srv-target"`
 	Text         string `json:"text"`
-}
-
-func recordsToEndpoints(records []Record) ([]*endpoint.Endpoint, error) {
-	endpointsMap := make(map[string]map[string]*endpoint.Endpoint)
-	for _, record := range records {
-		var target string
-		switch record.Type {
-		case "A":
-			fallthrough
-		case "AAAA":
-			target = record.Address
-		case "CNAME":
-			target = record.CName
-		case "MX":
-			target = fmt.Sprintf("%s %s", record.MXPreference, record.MXExchange)
-		case "NS":
-			target = record.NS
-		case "SRV":
-			target = fmt.Sprintf("%s %s %s %s", record.SrvPriority, record.SrvWeight, record.SrvPort, record.SrvTarget)
-		case "TXT":
-			target = record.Text
-		default:
-			slog.Warn("Unsupported record type", "type", record.Type)
-			continue
-		}
-
-		if _, ok := endpointsMap[record.Name]; !ok {
-			endpointsMap[record.Name] = make(map[string]*endpoint.Endpoint)
-		}
-		if _, ok := endpointsMap[record.Name][record.Type]; !ok {
-			endpointsMap[record.Name][record.Type] = &endpoint.Endpoint{
-				DNSName:    record.Name,
-				Targets:    endpoint.Targets{target},
-				RecordType: record.Type,
-				RecordTTL:  endpoint.TTL(record.TTL),
-			}
-		} else {
-			ep := endpointsMap[record.Name][record.Type]
-			ep.Targets = append(ep.Targets, target)
-			if int64(record.TTL) < int64(ep.RecordTTL) {
-				ep.RecordTTL = endpoint.TTL(record.TTL)
-			}
-		}
-	}
-
-	var endpoints []*endpoint.Endpoint
-	for _, gp := range endpointsMap {
-		for _, ep := range gp {
-			endpoints = append(endpoints, ep)
-		}
-	}
-
-	return endpoints, nil
 }

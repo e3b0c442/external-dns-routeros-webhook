@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
-	"net/url"
 
 	"sigs.k8s.io/external-dns/endpoint"
 	"sigs.k8s.io/external-dns/plan"
@@ -36,65 +35,23 @@ func GetDomainFilter(w http.ResponseWriter, r *http.Request) {
 func Records(w http.ResponseWriter, r *http.Request) {
 	slog.Debug("GET /records", "request_headers", r.Header)
 
-	reqURL, err := url.JoinPath(routerURL, "/rest/ip/dns/static")
+	records, err := client.ReadDNSStaticRecords()
 	if err != nil {
-		slog.Error("Failed to join URL", "error", err)
-		http.Error(w, "Failed to join URL", http.StatusInternalServerError)
+		slog.Error("Failed to list records", "error", err)
+		http.Error(w, "Failed to list records", http.StatusInternalServerError)
 		return
 	}
 
-	req, err := http.NewRequest("GET", reqURL, nil)
-	if err != nil {
-		slog.Error("Failed to create request", "error", err)
-		http.Error(w, "Failed to create request", http.StatusInternalServerError)
-		return
-	}
-	req.SetBasicAuth(username, password)
-	slog.Debug("GET /records", "routeros_request_url", req.URL.String(), "routeros_request_headers", req.Header)
-
-	resp, err := client.Do(req)
-	if err != nil {
-		slog.Error("Failed to get records", "error", err)
-		http.Error(w, "Failed to get records", http.StatusInternalServerError)
-		return
-	}
-	buf := &bytes.Buffer{}
-	if _, err := buf.ReadFrom(resp.Body); err != nil {
-		slog.Error("Failed to read response body", "error", err)
-		http.Error(w, "Failed to read response body", http.StatusInternalServerError)
-		return
-	}
-
-	slog.Debug("GET /records", "routeros_response_headers", resp.Header, "routeros_response_status", resp.Status, "routeros_response_body", buf.String())
-
-	if resp.StatusCode != http.StatusOK {
-		slog.Error("Failed to get records", "status", resp.Status, "body", buf.String())
-		http.Error(w, "Failed to get records", http.StatusInternalServerError)
-		return
-	}
-
-	var rawRecords []Record
-	if err := json.NewDecoder(buf).Decode(&rawRecords); err != nil {
-		slog.Error("Failed to decode records", "error", err)
-		http.Error(w, "Failed to decode records", http.StatusInternalServerError)
-		return
-	}
-
-	slog.Debug("GET /records", "routeros_records", rawRecords)
-
-	endpoints, err := recordsToEndpoints(rawRecords)
+	endpoints, err := recordsToEndpoints(records)
 	if err != nil {
 		slog.Error("Failed to convert records to endpoints", "error", err)
 		http.Error(w, "Failed to convert records to endpoints", http.StatusInternalServerError)
 		return
 	}
 
-	buf.Reset()
-	if err := json.NewEncoder(buf).Encode(endpoints); err != nil {
-		slog.Error("Failed to encode endpoints", "error", err)
-		http.Error(w, "Failed to encode endpoints", http.StatusInternalServerError)
-		return
-	}
+	buf := &bytes.Buffer{}
+	json.NewEncoder(buf).Encode(endpoints)
+
 	w.Header().Set("Content-Type", negotiatedMediaType)
 	slog.Debug("GET /records", "response_headers", w.Header(), "response_body", buf.String())
 
@@ -152,7 +109,56 @@ func ApplyChanges(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO implementation
+	for _, create := range changes.Create {
+		records, err := endpointToRecords(create)
+		if err != nil {
+			slog.Error("Failed to convert endpoint to records", "error", err)
+			http.Error(w, "Failed to convert endpoint to records", http.StatusInternalServerError)
+			return
+		}
+
+		for _, record := range records {
+			if err := client.CreateDNSStaticRecord(record); err != nil {
+				slog.Error("Failed to create record", "error", err)
+				http.Error(w, "Failed to create record", http.StatusInternalServerError)
+				return
+			}
+		}
+	}
+
+	for _, delete := range changes.Delete {
+		records, err := endpointToRecords(delete)
+		if err != nil {
+			slog.Error("Failed to convert endpoint to records", "error", err)
+			http.Error(w, "Failed to convert endpoint to records", http.StatusInternalServerError)
+			return
+		}
+
+		for _, record := range records {
+			if err := client.DeleteDNSStaticRecord(record.ID); err != nil {
+				slog.Error("Failed to delete record", "error", err)
+				http.Error(w, "Failed to delete record", http.StatusInternalServerError)
+				return
+			}
+		}
+	}
+
+	for _, update := range changes.UpdateNew {
+		records, err := endpointToRecords(update)
+		if err != nil {
+			slog.Error("Failed to convert endpoint to records", "error", err)
+			http.Error(w, "Failed to convert endpoint to records", http.StatusInternalServerError)
+			return
+		}
+
+		for _, record := range records {
+			if err := client.UpdateDNSStaticRecord(record); err != nil {
+				slog.Error("Failed to update record", "error", err)
+				http.Error(w, "Failed to update record", http.StatusInternalServerError)
+				return
+			}
+		}
+	}
 
 	w.WriteHeader(http.StatusNoContent)
 }

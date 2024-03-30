@@ -48,5 +48,6 @@ func main() {
 	http.HandleFunc("POST /records", ApplyChanges)
 	http.HandleFunc("GET /healthz", Healthz)
 
+	slog.Info("Listening on " + bindAddr)
 	log.Fatal(http.ListenAndServe(bindAddr, nil))
 }

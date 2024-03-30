@@ -1,6 +1,7 @@
 FROM --platform=$BUILDPLATFORM golang:latest as build
 ARG TARGETOS TARGETARCH
 ENV CGO_ENABLED=0
+WORKDIR /src
 
 COPY go.mod go.sum ./
 RUN go mod download

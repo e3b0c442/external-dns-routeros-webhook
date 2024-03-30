@@ -15,6 +15,11 @@ RUN --mount=target=. \
 
 FROM scratch
 
+COPY <<EOF /etc/passwd
+root:x:0:0:root:/root:/bin/sh
+unprivileged:x:1000:1000::/home/unprivileged:/bin/sh
+EOF
 COPY --from=build /out/routeros-webhook /routeros-webhook
+USER unprivileged
 
 ENTRYPOINT [ "/routeros-webhook" ]

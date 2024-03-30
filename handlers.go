@@ -156,3 +156,9 @@ func ApplyChanges(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusNoContent)
 }
+
+func Healthz(w http.ResponseWriter, r *http.Request) {
+	slog.Debug("GET /healthz", "request_headers", r.Header)
+
+	w.WriteHeader(http.StatusOK)
+}

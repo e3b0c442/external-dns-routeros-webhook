@@ -38,6 +38,7 @@ func main() {
 	http.HandleFunc("GET /records", Records)
 	http.HandleFunc("POST /adjustendpoints", AdjustEndpoints)
 	http.HandleFunc("POST /records", ApplyChanges)
+	http.HandleFunc("GET /healthz", Healthz)
 
 	log.Fatal(http.ListenAndServe(bindAddr, nil))
 }

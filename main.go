@@ -5,6 +5,7 @@ import (
 	"log"
 	"log/slog"
 	"net/http"
+	"os"
 )
 
 var (
@@ -15,12 +16,19 @@ var (
 	password  string
 )
 
+func defaultEnv(key, def string) string {
+	if value, ok := os.LookupEnv(key); ok {
+		return value
+	}
+	return def
+}
+
 func init() {
 	flag.BoolVar(&debug, "debug", false, "Enable debug logging")
-	flag.StringVar(&bindAddr, "bind-addr", "localhost:8888", "Address to bind to")
-	flag.StringVar(&routerURL, "router-url", "http://localhost", "URL of the router")
-	flag.StringVar(&username, "username", "admin", "Username for the router")
-	flag.StringVar(&password, "password", "admin", "Password for the router")
+	flag.StringVar(&bindAddr, "bind-addr", defaultEnv("WEBHOOK_BIND_ADDR", "localhost:8888"), "Address to bind to")
+	flag.StringVar(&routerURL, "router-url", defaultEnv("WEBHOOK_ROUTER_URL", "http://192.168.88.1"), "URL of the router")
+	flag.StringVar(&username, "router-username", defaultEnv("WEBHOOK_ROUTER_USERNAME", "admin"), "Username for the router")
+	flag.StringVar(&password, "router-password", defaultEnv("WEBHOOK_ROUTER_PASSWORD", ""), "Password for the router")
 }
 
 var client *http.Client

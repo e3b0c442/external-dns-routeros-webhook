@@ -74,7 +74,7 @@ func Records(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var rawRecords []Record
-	if err := json.NewDecoder(resp.Body).Decode(&rawRecords); err != nil {
+	if err := json.NewDecoder(buf).Decode(&rawRecords); err != nil {
 		slog.Error("Failed to decode records", "error", err)
 		http.Error(w, "Failed to decode records", http.StatusInternalServerError)
 		return

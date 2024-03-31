@@ -82,6 +82,12 @@ func AdjustEndpoints(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to list records", http.StatusInternalServerError)
 		return
 	}
+	// add "A" record type as needed
+	for _, record := range records {
+		if record.Type == "" {
+			record.Type = "A"
+		}
+	}
 
 	recordMap := make(map[string]map[string][]*Record)
 	for _, record := range records {

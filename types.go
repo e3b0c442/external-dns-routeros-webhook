@@ -50,14 +50,14 @@ type Record struct {
 	TTL  TTL    `json:"ttl"`
 
 	//targets
-	Address      string `json:"address"`
-	CName        string `json:"cname"`
-	MXPreference string `json:"mx-preference"`
-	MXExchange   string `json:"mx-exchange"`
-	NS           string `json:"ns"`
-	SrvPriority  string `json:"srv-priority"`
-	SrvWeight    string `json:"srv-weight"`
-	SrvPort      string `json:"srv-port"`
-	SrvTarget    string `json:"srv-target"`
-	Text         string `json:"text"`
+	Address      string `json:"address,omitempty"`
+	CName        string `json:"cname,omitempty"`
+	MXPreference string `json:"mx-preference,omitempty"`
+	MXExchange   string `json:"mx-exchange,omitempty"`
+	NS           string `json:"no,omitempty"`
+	SrvPriority  string `json:"srv-priority,omitempty"`
+	SrvWeight    string `json:"srv-weight,omitempty"`
+	SrvPort      string `json:"srv-port,omitempty"`
+	SrvTarget    string `json:"srv-target,omitempty"`
+	Text         string `json:"text,omitempty"`
 }

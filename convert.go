@@ -44,7 +44,7 @@ func recordsToEndpoints(records []*Record) ([]*endpoint.Endpoint, error) {
 	for _, record := range records {
 		if !provider.SupportedRecordType(record.Type) {
 			slog.Warn("Unsupported record type", "name", record.Name, "type", record.Type)
-			return nil, ErrUnsupportedRecordType
+			continue
 		}
 		ep, err := recordToEndpoint(record)
 		if err != nil {

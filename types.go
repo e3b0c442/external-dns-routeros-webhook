@@ -10,24 +10,6 @@ var (
 	ErrUnsupportedRecordType = fmt.Errorf("unsupported record type")
 )
 
-type strings []string
-
-func (ss *strings) String() string {
-	return fmt.Sprint([]string(*ss))
-}
-
-func (ss *strings) Set(value string) error {
-	if *ss == nil {
-		*ss = make(strings, 1)
-	} else {
-		nss := make(strings, len(*ss)+1)
-		copy(nss, *ss)
-		*ss = nss
-	}
-	(*ss)[len(*ss)-1] = value
-	return nil
-}
-
 type TTL int64
 
 var ttlRegexp = regexp.MustCompile(`(?:(\d+)w)?(?:(\d+)d)?(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?`)

@@ -44,7 +44,7 @@ func (t *TTL) UnmarshalJSON(data []byte) error {
 }
 
 type Record struct {
-	ID   string `json:".id"`
+	ID   string `json:".id,omitempty"`
 	Name string `json:"name"`
 	Type string `json:"type"`
 	TTL  TTL    `json:"ttl"`

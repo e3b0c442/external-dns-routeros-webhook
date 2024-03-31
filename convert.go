@@ -42,6 +42,9 @@ func recordsToEndpoints(records []*Record) ([]*endpoint.Endpoint, error) {
 	epm := make(map[string]map[string]*endpoint.Endpoint)
 
 	for _, record := range records {
+		if record.Type == "" {
+			record.Type = "A" // needed due to RouterOS API inconsistency
+		}
 		if !provider.SupportedRecordType(record.Type) {
 			slog.Warn("Unsupported record type", "name", record.Name, "type", record.Type)
 			continue

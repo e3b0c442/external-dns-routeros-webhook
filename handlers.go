@@ -76,7 +76,41 @@ func AdjustEndpoints(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// no-op
+	records, err := client.ReadDNSStaticRecords()
+	if err != nil {
+		slog.Error("Failed to list records", "error", err)
+		http.Error(w, "Failed to list records", http.StatusInternalServerError)
+		return
+	}
+
+	recordMap := make(map[string]map[string][]*Record)
+	for _, record := range records {
+		if _, ok := recordMap[record.Name]; !ok {
+			recordMap[record.Name] = make(map[string][]*Record)
+		}
+		if _, ok := recordMap[record.Name][record.Type]; !ok {
+			recordMap[record.Name][record.Type] = []*Record{record}
+		} else {
+			recordMap[record.Name][record.Type] = append(recordMap[record.Name][record.Type], record)
+		}
+	}
+
+	for _, ep := range endpoints {
+		if _, ok := recordMap[ep.DNSName]; !ok {
+			continue
+		}
+		if _, ok := recordMap[ep.DNSName][ep.RecordType]; !ok {
+			continue
+		}
+		for _, record := range recordMap[ep.DNSName][ep.RecordType] {
+			ep.ProviderSpecific = endpoint.ProviderSpecific{
+				{
+					Name:  ".id",
+					Value: record.ID,
+				},
+			}
+		}
+	}
 
 	buf.Reset()
 	if err := json.NewEncoder(buf).Encode(endpoints); err != nil {

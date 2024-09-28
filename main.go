@@ -30,7 +30,7 @@ func init() {
 	flag.StringVar(&routerURL, "router-url", defaultEnv("WEBHOOK_ROUTER_URL", "http://192.168.88.1"), "URL of the router")
 	flag.StringVar(&username, "router-username", defaultEnv("WEBHOOK_ROUTER_USERNAME", "admin"), "Username for the router")
 	flag.StringVar(&password, "router-password", defaultEnv("WEBHOOK_ROUTER_PASSWORD", ""), "Password for the router")
-	flag.StringVar(&metricsBindAddr, "metrics-addr", defaultEnv("WEBHOOK_METRICS_BIND_ADDR", "localhost:8080"), "Address for metrics and health checks")
+	flag.StringVar(&metricsBindAddr, "metrics-bind-addr", defaultEnv("WEBHOOK_METRICS_BIND_ADDR", ":8080"), "Address for metrics and health checks")
 }
 
 var client *RouterOSAPIClient

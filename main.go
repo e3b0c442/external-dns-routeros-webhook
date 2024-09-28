@@ -9,11 +9,12 @@ import (
 )
 
 var (
-	debug     bool
-	bindAddr  string
-	routerURL string
-	username  string
-	password  string
+	debug           bool
+	bindAddr        string
+	routerURL       string
+	username        string
+	password        string
+	metricsBindAddr string
 )
 
 func defaultEnv(key, def string) string {
@@ -29,6 +30,7 @@ func init() {
 	flag.StringVar(&routerURL, "router-url", defaultEnv("WEBHOOK_ROUTER_URL", "http://192.168.88.1"), "URL of the router")
 	flag.StringVar(&username, "router-username", defaultEnv("WEBHOOK_ROUTER_USERNAME", "admin"), "Username for the router")
 	flag.StringVar(&password, "router-password", defaultEnv("WEBHOOK_ROUTER_PASSWORD", ""), "Password for the router")
+	flag.StringVar(&metricsBindAddr, "metrics-addr", defaultEnv("WEBHOOK_METRICS_BIND_ADDR", "localhost:8080"), "Address for metrics and health checks")
 }
 
 var client *RouterOSAPIClient
@@ -48,6 +50,16 @@ func main() {
 	http.HandleFunc("POST /records", ApplyChanges)
 	http.HandleFunc("GET /healthz", Healthz)
 
+	metricsServeMux := http.NewServeMux()
+	metricsServeMux.HandleFunc("GET /healthz", Healthz)
+	metricsListener := &http.Server{
+		Addr:    metricsBindAddr,
+		Handler: metricsServeMux,
+	}
+	slog.Info("Metrics listening on " + metricsBindAddr)
+	go metricsListener.ListenAndServe()
+
 	slog.Info("Listening on " + bindAddr)
 	log.Fatal(http.ListenAndServe(bindAddr, nil))
+
 }

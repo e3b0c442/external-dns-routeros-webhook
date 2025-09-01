@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/http"
 )
 
@@ -36,6 +37,7 @@ func (c *RouterOSAPIClient) ReadDNSStaticRecords() ([]*Record, error) {
 		return nil, fmt.Errorf("ListDNSStaticRecords: failed to create request: %w", err)
 	}
 	req.SetBasicAuth(c.username, c.password)
+	slog.Debug("ListDNSStaticRecords", "url", req.URL.String())
 
 	resp, err := c.Do(req)
 	if err != nil {
@@ -65,6 +67,7 @@ func (c *RouterOSAPIClient) CreateDNSStaticRecord(record *Record) error {
 	if err != nil {
 		return fmt.Errorf("CreateDNSStaticRecord: failed to create request: %w", err)
 	}
+	slog.Debug("CreateDNSStaticRecord", "url", req.URL.String())
 
 	req.SetBasicAuth(c.username, c.password)
 	req.Header.Set("Content-Type", "application/json")
@@ -90,6 +93,7 @@ func (c *RouterOSAPIClient) DeleteDNSStaticRecord(id string) error {
 	if err != nil {
 		return fmt.Errorf("DeleteDNSStaticRecord: failed to create request: %w", err)
 	}
+	slog.Debug("DeleteDNSStaticRecord", "url", req.URL.String())
 	req.SetBasicAuth(c.username, c.password)
 
 	resp, err := c.Do(req)
@@ -116,6 +120,7 @@ func (c *RouterOSAPIClient) UpdateDNSStaticRecord(record *Record) error {
 	if err != nil {
 		return fmt.Errorf("UpdateDNSStaticRecord: failed to create request: %w", err)
 	}
+	slog.Debug("UpdateDNSStaticRecord", "url", req.URL.String())
 
 	req.SetBasicAuth(c.username, c.password)
 	req.Header.Set("Content-Type", "application/json")

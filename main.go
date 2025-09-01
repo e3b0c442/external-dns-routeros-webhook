@@ -61,5 +61,4 @@ func main() {
 
 	slog.Info("Listening on " + bindAddr)
 	log.Fatal(http.ListenAndServe(bindAddr, nil))
-
 }

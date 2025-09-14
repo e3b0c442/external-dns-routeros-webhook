@@ -6,6 +6,8 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 var (
@@ -52,6 +54,7 @@ func main() {
 
 	metricsServeMux := http.NewServeMux()
 	metricsServeMux.HandleFunc("GET /healthz", Healthz)
+	metricsServeMux.Handle("/metrics", promhttp.Handler())
 	metricsListener := &http.Server{
 		Addr:    metricsBindAddr,
 		Handler: metricsServeMux,
